@@ -2,35 +2,60 @@
 #include <FastLED.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include "constants.h"
+#include "index_page.h" //Our HTML webpage contents
 
-// How many leds in your strip?
-#define NUM_LEDS 10
-
-
-// For led chips like WS2812, which have a data line, ground, and power, you just
-// need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
-// ground, and power), like the LPD8806 define both DATA_PIN and CLOCK_PIN
-// Clock pin only needed for SPI based chipsets when not using hardware SPI
-#define DATA_PIN D1
 
 // Define the array of leds
 CRGB leds[NUM_LEDS];
-const char* ssid     = "the_good_wifi";         // The SSID (name) of the Wi-Fi network you want to connect to
-const char* password = "forkinshirtballs";
 ESP8266WebServer server(80);
-int x =0;
+int started = 0;
 
-void handleLED() {                          // If a POST request is made to URI /LED
-  Serial.println("command");
-  //int hue = server.arg("value").toInt();
-  //StaticColor(CHSV(125 , 255, 255));       // Add a header to respond with a new location for the browser to go to the home page again
-  server.send(200);                         // Send it back to the browser with an HTTP status 303 (See Other) to redirect
-  //FastLED.show();
+//funtion to overload show because of FastLED 3.5 bug
+void show(){
+  FastLED.show();
+  FastLED.show(); //FastLED BUG in 3.5 requires double show
+}
+
+//Web Server Functions
+void handleOn() {                          
+  Serial.println("on command started");
+  fill_solid (leds,NUM_LEDS,CRGB::Red);
+  show();
+  server.sendHeader("Location","/");
+  server.send(303);                   
+  Serial.println("on command finished");
+}
+
+void handleLOff() {                          
+  Serial.println("off command started");
+  fill_solid (leds,NUM_LEDS,CRGB::Black);
+  show();      
+  server.sendHeader("Location","/");
+  server.send(303);                         
+  Serial.println("off command finished");
+}
+
+void handleColor(){
+
+}
+
+void handleBrightness(){
+
+}
+
+void handleRoot() {
+  String s = MAIN_page;
+  server.send(200, "text/html", s);
 }
 
 void setup() {
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);  // GRB ordering is typical
+  //setup Fast LED and initialize to black
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(10);
+  fill_solid (leds,NUM_LEDS,CRGB::Black);
+  show();
+
   Serial.begin(9600);         // Start the Serial communication to send messages to the computer
   delay(10);
   Serial.println('\n');
@@ -52,23 +77,17 @@ void setup() {
   }
   Serial.println(" connected");
 
-  server.on("/LED", HTTP_GET, handleLED);
-  //server.on("/off", HTTP_GET, handleLEDoff);
+  server.on("/on", HTTP_GET, handleOn);
+  server.on("/off", HTTP_GET, handleLOff);
+  server.on("/color", HTTP_POST, handleOn);
+  server.on("/brightness", HTTP_POST, handleLOff);
+  server.on("/", HTTP_GET, handleRoot);
+
   server.begin();
   Serial.printf("Web server started, open %s in a web browser\n", WiFi.localIP().toString().c_str());
 }
 
 void loop() {
   server.handleClient();
-  // Serial.println(x);
-  // // Turn the LED on, then pause
-  // fill_solid (leds,10,CRGB::Blue);
-  // FastLED.show();
-  // delay(1000);
-  // // Now turn the LED off, then pause
-  // fill_solid (leds,10,CRGB::Black);
-  // //FastLED.show();
-  // delay(1000);
-  // x++;
 }
 
