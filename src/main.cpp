@@ -3,7 +3,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include "constants.h"
-#include "index_page.h" //Our HTML webpage contents
+#include "index_page.html" //Our HTML webpage contents wrapped in progmem
 
 
 // Define the array of leds
@@ -16,6 +16,11 @@ void show(){
   FastLED.show();
   FastLED.show(); //FastLED BUG in 3.5 requires double show
 }
+
+/////////
+
+
+
 
 //Web Server Functions
 void handleOn() {                          

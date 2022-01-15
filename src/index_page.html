@@ -1,0 +1,131 @@
+#include <Arduino.h>
+	const char MAIN_page[] PROGMEM = R"=====(
+
+	<HTML>
+
+	<HEAD>
+		<TITLE>Key Light Control Panel</TITLE>
+		<script src='https://cdn.jsdelivr.net/npm/@jaames/iro@5'></script>
+		<style>
+			body {
+				color: #fff;
+				background: #171F30;
+				line-height: 150%;
+			}
+
+			.wrapper svg {}
+
+			.wrap {
+				min-height: 100vh;
+				max-width: 720px;
+				margin: 0 auto;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: center;
+
+				.half {
+					width: 50%;
+					padding: 32px 0;
+				}
+			}
+
+			.title {
+				font-family: sans-serif;
+				line-height: 24px;
+				display: block;
+				padding: 8px 0;
+			}
+
+			.readout {
+				margin-top: 32px;
+				line-height: 180%;
+			}
+
+			#values {
+				font-family: monospace;
+				line-height: 150%;
+			}
+
+			.link {
+				margin-top: 16px;
+
+				a {
+					color: MediumSlateBlue;
+				}
+			}
+		</style>
+	</HEAD>
+
+	<BODY>
+		<CENTER>
+			<a href='#' onclick="on()">On</a><br>
+			<a href='#' onclick="off()">Off</a><br>
+			<div class="wrap">
+				<div class="half">
+					<div class="colorPicker"></div>
+				</div>
+				<div class="half readout">
+					<p>
+						iro.js is an HSV color picker widget for JavaScript with a modern SVG-based user interface --
+						and no jQuery or extra CSS / images.
+					</p>
+					<span class="title link">Head to <a href="https://iro.js.org?ref=codepen"
+							target="blank">iro.js.org</a> for full documentation and features, or check out the source
+						code on <a href="https://github.com/jaames/iro.js" target="blank">GitHub</a>!
+					</span>
+					<span class="title">Selected Color:</span>
+					<div id="values"></div>
+					<input id="hexInput"></input>
+				</div>
+			</div>
+		</CENTER>
+		<script>
+			// Create a new color picker instance
+			// https://iro.js.org/guide.html#getting-started
+			var colorPicker = new iro.ColorPicker(".colorPicker", {
+				// color picker options
+				// Option guide: https://iro.js.org/guide.html#color-picker-options
+				width: 280,
+				color: "rgb(255, 0, 0)",
+				borderWidth: 1,
+				borderColor: "#fff",
+			});
+
+			var values = document.getElementById("values");
+			var hexInput = document.getElementById("hexInput");
+
+			// https://iro.js.org/guide.html#color-picker-events
+			colorPicker.on(["color:init", "color:change"], function (color) {
+				// Show the current color in different formats
+				// Using the selected color: https://iro.js.org/guide.html#selected-color-api
+				values.innerHTML = [
+					"hex: " + color.hexString,
+					"rgb: " + color.rgbString,
+					"hsl: " + color.hslString,
+				].join("<br>");
+
+				hexInput.value = color.hexString;
+			});
+
+			hexInput.addEventListener('change', function () {
+				colorPicker.color.hexString = this.value;
+			});
+
+			function on() {
+				var xhr = new XMLHttpRequest();
+				xhr.open('GET', '/on');
+				xhr.send(null);
+			}
+
+			function off() {
+				var xhr = new XMLHttpRequest();
+				xhr.open('GET', '/off');
+				xhr.send(null);
+			}
+		</script>
+	</BODY>
+
+	</HTML>
+
+	)=====";
