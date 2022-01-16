@@ -10,6 +10,7 @@
 CRGB leds[NUM_LEDS];
 ESP8266WebServer server(80);
 int started = 0;
+CHSV color = CHSV(0 ,0 , 128);
 
 //funtion to overload show because of FastLED 3.5 bug
 void show(){
@@ -25,7 +26,7 @@ void show(){
 //Web Server Functions
 void handleOn() {                          
   Serial.println("on command started");
-  fill_solid (leds,NUM_LEDS,CRGB::Red);
+  fill_solid (&(leds[0]),NUM_LEDS,color);
   show();
   server.sendHeader("Location","/");
   server.send(303);                   
@@ -42,7 +43,15 @@ void handleLOff() {
 }
 
 void handleColor(){
-
+  int h = server.arg("h").toInt() * 255 / 360;
+  int s = server.arg("s").toInt() * 255 / 100;
+  int v = server.arg("v").toInt() * 255 / 100;
+  Serial.println(h);
+  Serial.println(s);
+  Serial.println(v);
+  color = CHSV(h , s, v);
+  fill_solid (leds,NUM_LEDS,color);
+  show();
 }
 
 void handleBrightness(){
@@ -57,7 +66,7 @@ void handleRoot() {
 void setup() {
   //setup Fast LED and initialize to black
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(10);
+  FastLED.setBrightness(255);
   fill_solid (leds,NUM_LEDS,CRGB::Black);
   show();
 
@@ -84,7 +93,7 @@ void setup() {
 
   server.on("/on", HTTP_GET, handleOn);
   server.on("/off", HTTP_GET, handleLOff);
-  server.on("/color", HTTP_POST, handleOn);
+  server.on("/color", HTTP_POST, handleColor);
   server.on("/brightness", HTTP_POST, handleLOff);
   server.on("/", HTTP_GET, handleRoot);
 

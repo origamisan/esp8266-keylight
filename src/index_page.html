@@ -4,6 +4,7 @@
 	<HTML>
 
 	<HEAD>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<TITLE>Key Light Control Panel</TITLE>
 		<script src='https://cdn.jsdelivr.net/npm/@jaames/iro@5'></script>
 		<style>
@@ -62,22 +63,7 @@
 			<a href='#' onclick="on()">On</a><br>
 			<a href='#' onclick="off()">Off</a><br>
 			<div class="wrap">
-				<div class="half">
-					<div class="colorPicker"></div>
-				</div>
-				<div class="half readout">
-					<p>
-						iro.js is an HSV color picker widget for JavaScript with a modern SVG-based user interface --
-						and no jQuery or extra CSS / images.
-					</p>
-					<span class="title link">Head to <a href="https://iro.js.org?ref=codepen"
-							target="blank">iro.js.org</a> for full documentation and features, or check out the source
-						code on <a href="https://github.com/jaames/iro.js" target="blank">GitHub</a>!
-					</span>
-					<span class="title">Selected Color:</span>
-					<div id="values"></div>
-					<input id="hexInput"></input>
-				</div>
+				<div class="colorPicker"></div>
 			</div>
 		</CENTER>
 		<script>
@@ -87,7 +73,7 @@
 				// color picker options
 				// Option guide: https://iro.js.org/guide.html#color-picker-options
 				width: 280,
-				color: "rgb(255, 0, 0)",
+				color: "rgb(128, 128, 128)",
 				borderWidth: 1,
 				borderColor: "#fff",
 			});
@@ -95,21 +81,12 @@
 			var values = document.getElementById("values");
 			var hexInput = document.getElementById("hexInput");
 
-			// https://iro.js.org/guide.html#color-picker-events
-			colorPicker.on(["color:init", "color:change"], function (color) {
+
+			colorPicker.on(["input:end"], function (color) {
 				// Show the current color in different formats
 				// Using the selected color: https://iro.js.org/guide.html#selected-color-api
-				values.innerHTML = [
-					"hex: " + color.hexString,
-					"rgb: " + color.rgbString,
-					"hsl: " + color.hslString,
-				].join("<br>");
-
-				hexInput.value = color.hexString;
-			});
-
-			hexInput.addEventListener('change', function () {
-				colorPicker.color.hexString = this.value;
+				//alert(color.hsl.h);
+				postAjax('/color', color.hsv, function (data) { console.log(data); });
 			});
 
 			function on() {
@@ -122,6 +99,22 @@
 				var xhr = new XMLHttpRequest();
 				xhr.open('GET', '/off');
 				xhr.send(null);
+			}
+
+			function postAjax(url, data, success) {
+				var params = typeof data == 'string' ? data : Object.keys(data).map(
+					function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]) }
+				).join('&');
+
+				var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+				xhr.open('POST', url);
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState > 3 && xhr.status == 200) { success(xhr.responseText); }
+				};
+				xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+				xhr.send(params);
+				return xhr;
 			}
 		</script>
 	</BODY>
